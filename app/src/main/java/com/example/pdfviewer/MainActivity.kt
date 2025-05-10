@@ -4,8 +4,12 @@ import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import com.example.pdfviewer.databinding.ActivityMainBinding
+import java.io.File
+import java.io.FileOutputStream
 
 class MainActivity : AppCompatActivity() {
 
@@ -17,8 +21,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.floatingActionButton.setOnClickListener{
-            launcher.launch("application/pdf")
+        binding.shareButton.setOnClickListener {
+            sharePdfFromIntentData()
         }
 
         if (intent.action == Intent.ACTION_VIEW) {
@@ -27,11 +31,38 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private val launcher = registerForActivityResult(
-        ActivityResultContracts.GetContent()
-    ){uri ->
-        uri?.let {
-            binding.pdfview.fromUri(it).load()
+    private fun sharePdfFromIntentData(){
+        val uri = intent?.data
+        if(uri == null){
+            Toast.makeText(this, "Nenhum arquivo pra compartilhar", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        try {
+            val tempFile = File(cacheDir, "PdfViewerTemp.pdf")
+
+            contentResolver.openInputStream(uri).use { input ->
+                FileOutputStream(tempFile).use { output ->
+                    input?.copyTo(output)
+                }
+            }
+
+            val contentUri = FileProvider.getUriForFile(
+                this, "${packageName}.provider",
+                tempFile
+            )
+
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/pdf"
+                putExtra(Intent.EXTRA_STREAM, contentUri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            startActivity(Intent.createChooser(shareIntent, "Compartilhar PDF"))
+        }catch (e: Exception){
+            Toast.makeText(this, "Erro ao compartilhar PDF", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
         }
     }
 }
+

@@ -12,7 +12,7 @@ android {
     defaultConfig {
         applicationId = "com.example.pdfviewer"
         minSdk = 28
-        targetSdk = 33
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -55,5 +55,5 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
-    implementation ("com.github.barteksc:android-pdf-viewer:2.8.2")
+    implementation ("com.github.mhiew:AndroidPdfViewer:3.1.0-beta.1")
 }
