@@ -1,8 +1,15 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.firebase.appdistribution")
     id("com.google.gms.google-services")
+}
+
+val propertiesFile = rootProject.file("local.properties")
+val localProperties = Properties().apply{
+    load(propertiesFile.inputStream())
 }
 
 android {
@@ -19,23 +26,40 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release"){
+            storeFile = file(localProperties.getProperty("keystore.file"))
+            storePassword = localProperties.getProperty("keystore.password")
+            keyAlias = localProperties.getProperty("keystore.alias")
+            keyPassword = localProperties.getProperty("keystore.key.password")
+        }
+    }
     buildTypes {
         release {
             firebaseAppDistribution {
                 testers="tainara123devargas@gmail.com"
             }
 
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            if(propertiesFile.exists()){
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+
+        debug {
+            isMinifyEnabled = false
         }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = "1.8"
     }
